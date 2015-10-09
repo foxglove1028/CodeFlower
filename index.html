@@ -139,9 +139,10 @@ $ git ls-files | xargs wc -l > symfony.wc
         var total = countElements(json);
         var w = parseInt(Math.sqrt(total) * 30, 10);
         var h = parseInt(Math.sqrt(total) * 30, 10);
-		var displayname = true;
+		var displayname = false;
         // create a new CodeFlower
         currentCodeFlower = new CodeFlower("#visualization", w, h, displayname).update(json);
+		currentCodeFlower.collapseNode();
       };
 
       d3.json('data.json', createCodeFlower);

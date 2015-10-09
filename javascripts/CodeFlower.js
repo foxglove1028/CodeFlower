@@ -31,9 +31,9 @@ CodeFlower.prototype.update = function(json) {
   this.json.x = this.w / 2;
   this.json.y = this.h / 2;
 
-  var nodes = this.flatten(this.json);
-  var links = d3.layout.tree().links(nodes);
-  var total = nodes.length || 1;
+  this.nodes = this.flatten(this.json);
+  var links = d3.layout.tree().links(this.nodes);
+  var total = this.nodes.length || 1;
 
   // remove existing text (will readd it afterwards to be sure it's on top)
   this.svg.selectAll("text").remove();
@@ -41,7 +41,7 @@ CodeFlower.prototype.update = function(json) {
   // Restart the force layout
   this.force
     .gravity(Math.atan(total / 50) / Math.PI * 0.4)
-    .nodes(nodes)
+    .nodes(this.nodes)
     .links(links)
     .start();
 
@@ -61,22 +61,22 @@ CodeFlower.prototype.update = function(json) {
   this.link.exit().remove();
 
   // Update the nodes
-  this.node = this.svg.selectAll("g.nodecont")
-    .data(nodes, function(d) { return d.name; })
+  this.node = this.svg.selectAll("g.node")
+    .data(this.nodes, function(d) { return d.name; })
     .classed("collapsed", function(d) { return d._children ? 1 : 0; });
 
-  //this.node.transition()
-  //  .attr("r", function(d) { return d.children ? 3.5 : Math.pow(d.size, 2/5) || 1; });
+  /*this.node.transition()
+    .attr("r", function(d) { return d.children ? 3.5 : Math.pow(d.size, 2/5) || 1; });*/
 
   // Enter any new nodes
   this.node.enter()
     .append('svg:g')
-    .attr("class", "nodecont")
+    .attr("class", "node")
+    .classed('directory', function(d) { return (d._children || d.children) ? 1 : 0; })
 	.attr("transform", function(d) { return "translate("+d.x+","+d.y+")"; })
 	.attr("name", function (d) { return d.name; })
     .append('svg:circle')
     .attr("class", "node")
-    .classed('directory', function(d) { return (d._children || d.children) ? 1 : 0; })
     .attr("r", function(d) { return d.children ? 3.5 : Math.pow(d.size, 2/5) || 1; })
     .style("fill", function color(d) {
       return "hsl(" + parseInt(360 / total * d.id, 10) + ",90%,70%)";
@@ -135,6 +135,18 @@ CodeFlower.prototype.click = function(d) {
     d._children = null;
   }
   this.update();
+};
+
+CodeFlower.prototype.collapseNode = function() {
+  for(var i = 0; i < this.nodes.length; i++) {
+	  var d = this.nodes[i];
+	  if(d.name !== "root") {
+		  d._children = d.children;
+		  d.children = null;
+	  }
+  }
+  this.update();
+  return;
 };
 
 CodeFlower.prototype.mouseover = function(d) {
